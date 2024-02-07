@@ -24,54 +24,33 @@ class Program
 
         Console.WriteLine("Start Time : " + DateTime.UtcNow.ToString());
         List<Vehicle> vehicleDataList = ReadBinaryDataFile("VehiclePositions.dat");
-
-        foreach (var position in testPosition)
+        
+        if(vehicleDataList.Count > 0)
         {
-            FindNearestCoordinate(position, vehicleDataList);
+            for (int x =0; x < testPosition.Count; x++)
+            {
+                FindNearestCoordinate(testPosition[x], vehicleDataList);
+            }
         }
+        else
+            Console.WriteLine("No Vehicle List to search from");
+
 
         Console.WriteLine("End Time : " + DateTime.UtcNow.ToString());
     }
+
     public static void FindNearestCoordinate(Position position, List<Vehicle> vehicleData)
     {
-        Vehicle nearest = vehicleData[0];
-        double minDistance = CalculateDistance(position.Latitude, position.Longitude, nearest.Latitude,nearest.Longitude);
+        var nearest = vehicleData.MinBy(v => CalculateDistance(position.Latitude, position.Longitude, v.Latitude, v.Longitude));
 
-        foreach (var coordinate in vehicleData)
-        {
-            double distance = CalculateDistance(position.Latitude, position.Longitude, coordinate.Latitude, coordinate.Longitude);
-
-            if (distance < minDistance)
-            {
-                minDistance = distance;
-                nearest = coordinate;
-            }
-        }
-
-        Console.WriteLine("Nearest Vehicle for Position #"+ position.PositionId + " : "  + nearest.VehicleRegistration);
+        Console.WriteLine("Nearest Vehicle for Position #" + position.PositionId + " : " + nearest.VehicleRegistration);
     }
     public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
     {
-        // Convert latitude and longitude from degrees to radians
-        double lat1Rad = Math.PI * lat1 / 180;
-        double lon1Rad = Math.PI * lon1 / 180;
-        double lat2Rad = Math.PI * lat2 / 180;
-        double lon2Rad = Math.PI * lon2 / 180;
-
-        // Calculate differences
-        double deltaLat = lat2Rad - lat1Rad;
-        double deltaLon = lon2Rad - lon1Rad;
-
-        // Haversine formula
-        double a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
-                   Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
-                   Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2);
-
-        double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-
-        // Calculate distance using Radius of the Earth in kilometers(6371)
-        double distance = 6371 * c;
-        return distance;
+        const double radius = 6371; 
+        double x = (lon2 - lon1) * Math.Cos((lat1 + lat2) / 2);
+        double y = lat2 - lat1;
+        return Math.Sqrt(x * x + y * y) * radius;
     }
 
     static List<Vehicle> ReadBinaryDataFile(string filePath)
